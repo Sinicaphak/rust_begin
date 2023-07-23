@@ -1,11 +1,11 @@
 mod common;
 
-use test112;
-use test112::common::snow_flake::snow_flake::Snowflake;
-use test112::pic::*;
-use test112::pic::ppm::FILE_TYPE_PPM;
+use RustRayTracing;
+use RustRayTracing::common::snow_flake::snow_flake::Snowflake;
+use RustRayTracing::pic::*;
+use RustRayTracing::pic::ppm::FILE_TYPE_PPM;
 use common::*;
-use test112::common::keep_two_decimal_places;
+use RustRayTracing::common::keep_two_decimal_places;
 
 
 #[test]

@@ -1,7 +1,7 @@
 mod common;
 
 use common::*;
-use test112::entity::vec3::*;
+use RustRayTracing::entity::vec3::*;
 use std::assert_eq;
 
 #[test]

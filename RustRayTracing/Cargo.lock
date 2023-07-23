@@ -3,6 +3,16 @@
 version = 3
 
 [[package]]
+name = "RustRayTracing"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "lazy_static",
+ "libmath",
+ "rand 0.8.5",
+]
+
+[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -579,16 +589,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "test112"
-version = "0.1.0"
-dependencies = [
- "image",
- "lazy_static",
- "libmath",
- "rand 0.8.5",
 ]
 
 [[package]]

@@ -3,7 +3,7 @@ mod common;
 mod entity;
 
 use std::time::Instant;
-use test112::run;
+use RustRayTracing::run;
 use crate::pic::ppm::PPM;
 
 
