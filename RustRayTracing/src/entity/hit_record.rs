@@ -48,5 +48,7 @@ impl HitRecord {
     pub fn front_face(&self) -> bool {
         self.front_face
     }
-
+    pub fn material(&self) -> &Arc<dyn Material> {
+        &self.material
+    }
 }

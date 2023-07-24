@@ -5,7 +5,7 @@ pub mod common;
 pub mod entity;
 
 use std::sync::Arc;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use pic::*;
 use crate::pic::ppm::PPM;
 use entity::vec3::*;
@@ -14,9 +14,10 @@ use crate::entity::*;
 use crate::entity::camera::{ASPECT_RATIO, Camera};
 use crate::entity::ray::*;
 use crate::entity::hittable_list::*;
-use crate::entity::material::DEFAULT_MATERIAL;
 use crate::entity::sphere::Sphere;
 use crate::entity::material::default_material::*;
+use crate::entity::material::lambertian::Lambertian;
+use crate::entity::material::metal::Metal;
 
 
 // 光线最大反射次数
@@ -47,7 +48,7 @@ pub fn run() {
                 let u: f64 = (i as f64 + gain_random_between_0_1())  / ( ( IMAGE_WIDTH - 1 ) as f64);
                 let v: f64 = (j as f64 + gain_random_between_0_1())  / ( ( IMAGE_HEIGHT - 1 ) as f64);
                 let ray = camera.get_ray(u, v);
-                color += ray_color(ray, &world, MAX_REFLECT_LIMIT);
+                color = &color + &ray_color(ray, &world, MAX_REFLECT_LIMIT);
             }
 
             h_vec.push(
@@ -75,6 +76,14 @@ fn ray_color<T: Hittable>(ray: Ray, world: &T, mut limit: usize) -> Color {
     // 为什么t_min要设成0.0001???
     // 因为这样做会忽略方向很相同的反射光线,这会提高性能,并使得图更亮一点
     if let Some(hr) = world.hit(&ray, 0.0001, f64::INFINITY) {
+        match hr.material().scatter(&ray, &hr) {
+            Some(bean) => {
+                limit -= 1;
+                return hadamard_mul(bean.attenuation(), &ray_color(ray, world, limit));
+            },
+            None => return Color::black(),
+        }
+
         let target: Point3 = hr.point().clone() + hr.normal().clone() + Vec3::random_unit();
         limit -= 1;
         // 迭代出反射后的光线的路径
@@ -93,23 +102,49 @@ fn ray_color<T: Hittable>(ray: Ray, world: &T, mut limit: usize) -> Color {
 
 /// 塞点物体进来渲染
 fn load_hittables() -> HittableList {
+    let ground_color = Color::new(0.8, 0.8, 0.0);
+    let ground_center = Color::new(0.7, 0.3, 0.3);
+    let ground_left = Color::new(0.8, 0.8, 0.8);
+    let ground_right = Color::new(0.8, 0.6, 0.2);
+
+
     let mut world = HittableList::new();
+
+    let material_ground = Arc::new(Lambertian::new(ground_color));
+    let material_center = Arc::new(Lambertian::new(ground_center));
+    let material_left = Arc::new(Metal::new(ground_left));
+    let material_right = Arc::new(Metal::new(ground_right));
+
     let sphere_one = Sphere::new(
-        Point3::new(0.0, 0.0, -1.0),
-        0.5,
-        DEFAULT_MATERIAL.clone()
+        Point3::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground
     );
     let sphere_two = Sphere::new(
-        Point3::new(0.0, -100.0, -1.0),
-        99.5,
-        DEFAULT_MATERIAL.clone()
+        Point3::new(0.0, 0.0, -1.0),
+        0.5,
+        material_center
+    );
+    let sphere_three = Sphere::new(
+        Point3::new(-1.0, 0.0, -1.0),
+        0.5,
+        material_left
+    );
+    let sphere_four = Sphere::new(
+        Point3::new(1.0, 0.0, -1.0),
+        0.5,
+        material_right
     );
 
     let arc_so = Arc::new(sphere_one);
     let arc_sw = Arc::new(sphere_two);
+    let arc_st = Arc::new(sphere_three);
+    let arc_sf = Arc::new(sphere_four);
 
     world.add(arc_sw);
     world.add(arc_so);
+    world.add(arc_st);
+    world.add(arc_sf);
 
     return world;
 }

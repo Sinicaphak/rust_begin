@@ -6,13 +6,14 @@ pub mod hittable_list;
 pub mod camera;
 pub mod material;
 
+use once_cell::sync::{Lazy, OnceCell};
 use rand::rngs::ThreadRng;
 use rand::{Rng, thread_rng};
 use crate::entity::ray::Ray;
 use hit_record::*;
 use vec3::*;
 
-
+pub static BLACK: Lazy<Color> = Lazy::new(|| Color::black());
 
 pub trait Hittable{
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;

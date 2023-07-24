@@ -13,4 +13,12 @@ impl ScatteredBean {
             scattered,
         }
     }
+
+
+    pub fn attenuation(&self) -> &Color {
+        &self.attenuation
+    }
+    pub fn scattered(&self) -> &Ray {
+        &self.scattered
+    }
 }

@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 use std::process::Output;
+use std::sync::Arc;
+use once_cell::sync::{Lazy, OnceCell};
 use crate::common::{clamp, gain_random, gain_random_between_0_1, keep_two_decimal_places};
 use crate::pic::ppm::MAX_RGB;
 /// vec的三个参数都小于这个值,则vec会被认为等于原点
@@ -147,7 +149,7 @@ impl Add for Vec3{
     }
 }
 
-/// 加+
+/// 加+, 使用引用
 impl Add for &Vec3{
     type Output = Vec3;
 
@@ -160,7 +162,7 @@ impl Add for &Vec3{
     }
 }
 /// 自加+
-impl AddAssign for Vec3{
+impl AddAssign for &mut Vec3{
     fn add_assign(&mut self, rhs: Self) {
         self.x += rhs.x;
         self.y += rhs.y;
@@ -173,6 +175,18 @@ impl Sub for Vec3 {
 
     fn sub(self, rhs: Self) -> Self {
         Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+/// 减-, 使用引用
+impl Sub for &Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Vec3 {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
             z: self.z - rhs.z,
@@ -197,10 +211,29 @@ impl PartialEq for Vec3 {
         (self.x == other.x) && (self.y == other.y) && (self.z == other.z)
     }
 }
+/// 点乘*
+impl Mul for &Vec3{
+    type Output = f64;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
+    }
+}
 /// 点乘
 /// 调用dot()方法, 不区分左右乘
 pub fn dot(lhs: &Vec3, rhs: &Vec3) -> f64 {
     (lhs.x * rhs.x) + (lhs.y * rhs.y) + (lhs.z * rhs.z)
+}
+/// Hadamard积
+/// 对应元素相乘后作为元素组成向量:
+/// a( a1, a2, a3 )    b( b1, b2, b3 )
+/// hadamard_mul(a, b) = c( a1*b1, a2*b2, a3*b3 )
+pub fn hadamard_mul(lhs: &Vec3, rhs: &Vec3) -> Vec3 {
+    Vec3::new(
+        lhs.x * rhs.x,
+        lhs.y * rhs.y,
+        lhs.z * rhs.z,
+    )
 }
 /// 叉乘
 /// 调用cross()方法, 区分左乘 右乘
@@ -245,6 +278,12 @@ pub fn write_color(color: Color, samples_per_pixel: usize) -> (usize, usize, usi
     let samples_per_pixel = samples_per_pixel as f64;
 
     (calculate_rgb(*r, samples_per_pixel), calculate_rgb(*g, samples_per_pixel), calculate_rgb(*b, samples_per_pixel))
+}
+
+/// 根据入射向量v和法线n给出射向量
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    let out_len = dot(v, n);
+    return v - &dot_num(2.0*out_len, n);
 }
 
 fn calculate_rgb(mut rgb: f64, samples_per_pixel: f64) -> usize {
